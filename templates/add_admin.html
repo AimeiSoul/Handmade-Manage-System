@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 style="text-align: center;">添加管理员</h1>
+    
+    <form method="POST" style="max-width: 500px; margin: 0 auto 30px;">
+        <div>
+            <label for="username">用户名:</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+        
+        <div>
+            <label for="password">密码:</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <button type="submit" class="btn"><i class="fas fa-user-plus"></i> 添加管理员</button>
+        </div>
+    </form>
+    
+    <h2>现有管理员</h2>
+    <div style="background: white; padding: 15px; border-radius: 8px;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background-color: #f2f2f2;">
+                    <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">用户名</th>
+                    <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">创建时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for admin in admins %}
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ admin[1] }}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ admin[3] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

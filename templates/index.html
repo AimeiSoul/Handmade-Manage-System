@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 style="text-align: center; margin-top: 10px;">手工展示</h1>
+    
+    <div style="text-align: center; margin: 30px 0;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 20px;">
+            <a href="{{ url_for('show_category', category='knitting') }}" class="btn" style="font-size: 1.4em; padding: 15px 30px; width: 80%; max-width: 300px;">
+                <i class="fab fa-yarn"></i> 针织类
+            </a>
+            <a href="{{ url_for('show_category', category='crafting') }}" class="btn" style="font-size: 1.4em; padding: 15px 30px; width: 80%; max-width: 300px;">
+                <i class="fas fa-paint-brush"></i> 手工类
+            </a>
+        </div>
+    </div>
+    
+    <div style="text-align: center; margin-top: 40px;">
+        <h2>最新项目</h2>
+        <!-- 添加特定类名用于PC端未登录状态 -->
+        <div class="project-grid {% if device_type == 'desktop' and not session.admin %}pc-home-grid{% endif %}">
+            {% for project in latest_projects %}
+                <div class="project-card">
+                    <!-- 图片部分 -->
+                    <div class="project-image-container">
+                        {% if project.image_path %}
+                            <img src="{{ url_for('static', filename=project.thumbnail_path) }}"
+                                 data-full="{{ url_for('static', filename=project.image_path) }}"
+                                 alt="{{ project.title }}" 
+                                 class="project-image">
+                        {% else %}
+                            <div class="project-image-placeholder">
+                                <i class="fas fa-image"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- 文字信息部分 -->
+                    <div class="project-info">
+                        <h3 class="project-title">{{ project.title }}</h3>
+                        <p class="project-description">
+                            {% if project.description %}
+                                 {{ project.description[:50] }}{% if project.description|length > 50 %}...{% endif %}
+                            {% else %}
+                                 <span style="color: #999; font-style: italic;">暂无描述</span>
+                            {% endif %}
+                        </p>
+                        
+                        <div class="project-meta">
+                            <span class="project-category">
+                                {% if project.category == 'knitting' %}针织类{% else %}手工类{% endif %}
+                            </span>
+                            <span class="status-tag 
+                                {% if project.status == '制作中' %}status-making{% endif %}
+                                {% if project.status == '排队中' %}status-queued{% endif %}
+                                {% if project.status == '已完成' %}status-completed{% endif %}
+                            ">
+                                {{ project.status }}
+                            </span>
+                        </div>
+                        {% if project.status == '已完成' %}
+                        <div class="project-completed">
+                            <small>完成时间: {{ project.format_completed_date() }}</small>
+                        </div>
+                    {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <p>暂无项目</p>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

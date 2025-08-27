@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 style="text-align: center;">编辑项目</h1>
+    
+    <form method="POST" enctype="multipart/form-data">
+        <div>
+            <label for="title">项目标题:</label>
+            <input type="text" id="title" name="title" value="{{ project.title }}" required>
+        </div>
+        
+        <div>
+            <label for="description">项目描述:</label>
+            <textarea id="description" name="description" rows="4" placeholder="选填项，可以留空">{{ project.description if project.description else '' }}</textarea>
+        </div>
+        
+        <div>
+            <label for="category">分类:</label>
+            <select id="category" name="category" required>
+                <option value="knitting" {% if project.category == 'knitting' %}selected{% endif %}>针织类</option>
+                <option value="crafting" {% if project.category == 'crafting' %}selected{% endif %}>手工类</option>
+            </select>
+        </div>
+        
+        <div>
+            <label for="status">状态:</label>
+            <select id="status" name="status" required onchange="toggleCompletedDate()">
+                <option value="制作中" {% if project.status == '制作中' %}selected{% endif %}>制作中</option>
+                <option value="排队中" {% if project.status == '排队中' %}selected{% endif %}>排队中</option>
+                <option value="已完成" {% if project.status == '已完成' %}selected{% endif %}>已完成</option>
+            </select>
+        </div>
+
+        <div id="completedDateContainer" style="display: {% if project.status == '已完成' %}block{% else %}none{% endif %};">
+            <label for="completed_at">完成时间:</label>
+            <input type="date" id="completed_at" name="completed_at" value="{{ project.get_completed_date_for_input() }}">
+            <small style="color: #666;">（选填）</small>
+        </div>        
+
+        <div>
+            <label>当前图片:</label>
+            {% if project.image_path %}
+                <img src="{{ url_for('static', filename=project.image_path) }}" alt="{{ project.title }}" style="max-width: 200px; display: block; margin: 10px 0; border-radius: 8px;">
+            {% else %}
+                <p>无图片</p>
+            {% endif %}
+        </div>
+        
+        <div>
+            <label for="image">更新项目图片:</label>
+            <input type="file" id="image" name="image" accept="image/*">
+        </div>
+        
+        <div class="button-container">
+            <button type="submit" class="btn"><span class='btn-content'><i class="fas fa-save"></i> 更新项目</button>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn"><span class='btn-content'><i class="fas fa-arrow-left"></i> 返回</a>
+        </div>
+    </form>
+
+    <script>
+        function toggleCompletedDate() {
+            const status = document.getElementById('status').value;
+            const completedDateContainer = document.getElementById('completedDateContainer');
+            
+            if (status === '已完成') {
+                completedDateContainer.style.display = 'block';
+            } else {
+                completedDateContainer.style.display = 'none';
+                document.getElementById('completed_at').value = '';
+            }
+        }
+        
+        // 页面加载时检查状态
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleCompletedDate();
+        });
+    </script>
+{% endblock %}

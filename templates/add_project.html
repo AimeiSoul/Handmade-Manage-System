@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 style="text-align: center;">添加新项目</h1>
+    
+    <form method="POST" enctype="multipart/form-data">
+        <div>
+            <label for="title">项目标题:</label>
+            <input type="text" id="title" name="title" required>
+        </div>
+        
+        <div>
+            <label for="description">项目描述:</label>
+            <textarea id="description" name="description" rows="4" placeholder="选填项，可以留空"></textarea>
+        </div>
+        
+        <div>
+            <label for="category">分类:</label>
+            <select id="category" name="category" required>
+                <option value="knitting">针织类</option>
+                <option value="crafting">手工类</option>
+            </select>
+        </div>
+        
+        <div>
+            <label for="status">状态:</label>
+            <select id="status" name="status" required onchange="toggleCompletedDate()">
+                <option value="制作中">制作中</option>
+                <option value="排队中">排队中</option>
+                <option value="已完成">已完成</option>
+            </select>
+        </div>
+
+        <div id="completedDateContainer" style="display: none;">
+            <label for="completed_at">完成时间:</label>
+            <input type="date" id="completed_at" name="completed_at">
+            <small style="color: #666;">（选填）</small>
+        </div>
+        
+        <div>
+            <label for="image">项目图片:</label>
+            <input type="file" id="image" name="image" accept="image/*">
+        </div>
+        
+        <div class="button-container">
+            <button type="submit" class="btn"><span class='btn-content'><i class="fas fa-plus-circle"></i> 添加项目</button>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn"><span class='btn-content'><i class="fas fa-arrow-left"></i> 返回</a>
+        </div>
+    </form>
+
+    <script>
+        function toggleCompletedDate() {
+            const status = document.getElementById('status').value;
+            const completedDateContainer = document.getElementById('completedDateContainer');
+            
+            if (status === '已完成') {
+                completedDateContainer.style.display = 'block';
+            } else {
+                completedDateContainer.style.display = 'none';
+                document.getElementById('completed_at').value = '';
+            }
+        }
+        
+        // 页面加载时检查状态
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleCompletedDate();
+        });
+    </script>
+{% endblock %}

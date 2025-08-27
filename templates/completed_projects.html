@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 style="text-align: center;">已完成项目列表</h1>
+    
+    <div class="nav-buttons">
+        <a href="{{ url_for('admin_dashboard') }}" class="btn"><i class="fas fa-arrow-left"></i> 返回管理面板</a>
+        <a href="{{ url_for('add_new_project') }}" class="btn"><i class="fas fa-plus-circle"></i> 添加新项目</a>
+    </div>
+    
+    {% if projects %}
+        <div class="completed-projects-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>项目名称</th>
+                        <th>描述</th>
+                        <th>完成时间</th>
+                        <th>类别</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for project in projects %}
+                        <tr>
+                            <td class="project-title-cell">{{ project.title }}</td>
+                            <td class="project-description-cell">
+                                {% if project.description %}
+                                    {{ project.description }}
+                                {% else %}
+                                    <span class="no-description">暂无描述</span>
+                                {% endif %}
+                            </td>
+                            <td class="project-completed-cell">{{ project.format_completed_date() }}</td>
+                            <td class="project-category-cell">
+                                {% if project.category == 'knitting' %}针织类{% else %}手工类{% endif %}
+                            </td>
+                            <td class="project-actions-cell">
+                                <a href="{{ url_for('edit_existing_project', project_id=project.id) }}" class="btn-small"><i class="fas fa-edit"></i> 编辑</a>
+                                <a href="{{ url_for('delete_existing_project', project_id=project.id) }}" class="btn-small btn-danger" onclick="return confirm('确定删除该项目吗？')"><i class="fas fa-trash"></i> 删除</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="no-projects">
+            <p>暂无已完成项目</p>
+        </div>
+    {% endif %}
+
+<!-- 分页按钮 -->
+<div class="pagination">
+    {% if page > 1 %}
+        <a href="{{ url_for('completed_projects', page=page-1) }}" class="page-btn">上一页</a>
+    {% endif %}
+
+    {% for p in range(1, total_pages + 1) %}
+        <a href="{{ url_for('completed_projects', page=p) }}"
+           class="page-btn {% if p == page %}active{% endif %}">{{ p }}</a>
+    {% endfor %}
+
+    {% if page < total_pages %}
+        <a href="{{ url_for('completed_projects', page=page+1) }}" class="page-btn">下一页</a>
+    {% endif %}
+</div>
+{% endblock %}

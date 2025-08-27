@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 内容安全策略 -->
+    <!--<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests; default-src https: 'self' 'unsafe-inline' 'unsafe-eval' data: blob:;"> -->
+    <title>手工展示管理系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 网站图标 -->
+    <link rel="icon" href="{{ url_for('static', filename='/logo.svg') }}" type="image/svg+xml">
+
+    <!-- 预加载关键资源 -->
+    <link rel="preload" href="{{ url_for('static', filename='css/style.css') }}" as="style">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+
+    <style>
+        body {
+            background-image: url("{{ background }}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px auto;
+            max-width: 1200px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            flex: 1; /* 占据剩余空间 */
+        }
+        
+        /* 版权信息样式 */
+        .copyright {
+            text-align: center;
+            padding: 15px;
+            color: white;
+            background-color: transparent;
+            margin-top: auto; /* 确保始终在底部 */
+            font-size: 0.9em;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            padding-top: 50px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.95);
+        }
+        
+        .modal-content {
+            margin: auto;
+            display: block;
+            max-width: 90%;
+            max-height: 90%;
+        }
+        
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="{% if device_type == 'desktop' %}desktop{% else %}mobile{% endif %} {% if session.admin %}logged-in{% else %}not-logged-in{% endif %}">
+    <!-- 设备类型指示器 -->
+    <div class="device-indicator">
+        当前设备: {{ device_type }}
+    </div>
+    
+    <div class="container {% if session.admin %}logged-in{% else %}not-logged-in{% endif %}">
+        <!-- 登录信息显示 -->
+      <!--  {% if session.admin %}
+        <div class="login-info">
+            <span>当前登录：<span class="admin-name">{{ session.admin }}</span></span>
+            {% if session.login_time %}
+            <span> | 登录时间：<span class="login-time">{{ session.login_time }}</span></span>
+            {% endif %}
+        </div>
+        {% endif %} -->
+
+        <div class="nav-buttons">
+            <a href="{{ url_for('home') }}" class="btn"><i class="fas fa-home"></i> 首页</a>
+            {% if session.admin %}
+                <a href="{{ url_for('admin_dashboard') }}" class="btn"><i class="fas fa-tachometer-alt"></i> 管理面板</a>
+                <a href="{{ url_for('add_new_project') }}" class="btn"><i class="fas fa-plus-circle"></i> 添加项目</a>
+                <a href="{{ url_for('add_new_admin') }}" class="btn"><i class="fas fa-user-plus"></i> 添加管理员</a>
+                <a href="{{ url_for('admin_logout') }}" class="btn"><i class="fas fa-sign-out-alt"></i> 退出登录</a>
+            {% else %}
+                <a href="{{ url_for('admin_login') }}" class="btn"><i class="fas fa-sign-in-alt"></i> 管理员登录</a>
+            {% endif %}
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flashes">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- 版权信息 -->
+    <div class="copyright">
+        CopyRight © By Aimei All Rights Reserved
+    </div>
+
+
+    <div id="imageModal" class="modal">
+        <span class="close">&times;</span>
+        <img class="modal-content" id="expandedImg">
+    </div>
+
+    <script>
+        // 图片放大功能
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('expandedImg');
+        const closeBtn = document.querySelector('.close');
+        
+        document.querySelectorAll('.project-image').forEach(img => {
+            img.onclick = function() {
+                modal.style.display = "block";
+                modalImg.src = this.getAttribute("data-full");
+            }
+        });
+        
+        closeBtn.onclick = function() {
+            modal.style.display = "none";
+        }
+        
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+        
+        // 移动设备触摸事件支持
+        modalImg.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+        }, { passive: false });
+    </script>
+
+        //自动检查会话过期(每分钟检查一次)
+        setInterval(function() {
+            fetch('/check_session', {
+               method: 'GET',
+               credentials: 'same-origin'
+            }).then(respones => {
+               if (response.redirected) {
+                   windows.location.href = response.url;
+               }
+            });
+        }, 60000); // 每分钟检查一次
+    </script>
+</body>
+</html>
