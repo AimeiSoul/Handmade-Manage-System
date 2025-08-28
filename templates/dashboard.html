@@ -12,7 +12,7 @@
         <div class="project-grid">
             {% for project in knitting_projects %}
                 <div class="project-card">
-                    {% if project.image_path and project.image_path != project.DEFAULT_IMAGE %}
+                    {% if project.image_path %}
                         <img src="{{ url_for('static', filename=project.thumbnail_path) }}"
                              data-full="{{ url_for('static', filename=project.image_path) }}"
                              alt="{{ project.title }}"
@@ -56,8 +56,11 @@
         <div class="project-grid">
             {% for project in crafting_projects %}
                 <div class="project-card">
-                    {% if project.image_path and project.image_path != project.DEFAULT_IMAGE %}
-                        <img src="{{ url_for('static', filename=project.image_path) }}" alt="{{ project.title }}" class="project-image">
+                    {% if project.image_path %}
+                        <img src="{{ url_for('static', filename=project.thumbnail_path) }}"
+                             data-full="{{ url_for('static', filename=project.image_path) }}"
+                             alt="{{ project.title }}"
+                             class="project-image">
                     {% else %}
                         <div class="project-image-placeholder">
                             <i class="fas fa-image"></i>
