@@ -179,7 +179,7 @@ class Project:
             file.save(save_path)
 
             # 生成缩略图
-            thumbnail_filename = f"thumb_{new_filename}"
+            thumbnail_filename = f"thumb_{uuid.uuid4().hex}.webp"
             thumb_path = os.path.join(thumb_dir, thumbnail_filename)
             try:
                 img = Image.open(save_path)
@@ -188,15 +188,8 @@ class Project:
             if img.mode in ("RGBA", "P"):
                 img = img.convert("RGB")
 
-            # 按格式分别压缩
-            if ext in ["jpg", "jpeg"]:
-                img.save(thumb_path, "JPEG", optimize=True, quality=85)  # 85质量足够清晰
-            elif ext == "png":
-                img.save(thumb_path, "PNG", optimize=True)
-            elif ext == "webp":
-                img.save(thumb_path, "WEBP", quality=85, method=6)
-            else:
-                img.save(thumb_path)  # 其他格式直接保存
+            # 保存为 webp (quality 可调)
+            img.save(thumb_path, "WEBP", quality=80, method=6)
 
             print(f"已保存压缩图: {thumb_path}")
         except Exception as e:
