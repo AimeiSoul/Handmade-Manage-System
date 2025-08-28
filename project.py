@@ -140,15 +140,15 @@ class Project:
             except Exception as e:
                 print(f"删除图片文件时出错: {e}")
         
-        # 删除缩略图
+        # 删除压缩图
         if self.thumbnail_path and self.thumbnail_path != self.DEFAULT_IMAGE:
             thumb_path = os.path.join('static', self.thumbnail_path)
             try:
                 if os.path.exists(thumb_path):
                     os.remove(thumb_path)
-                    print(f"已删除缩略图文件: {thumb_path}")
+                    print(f"已删除压缩图文件: {thumb_path}")
             except Exception as e:
-                print(f"删除缩略图时出错: {e}")
+                print(f"删除压缩图时出错: {e}")
 
         # 删除数据库记录
         conn = sqlite3.connect('handshop.db')
@@ -183,13 +183,27 @@ class Project:
             thumb_path = os.path.join(thumb_dir, thumbnail_filename)
             try:
                 img = Image.open(save_path)
-                img.thumbnail((300, 300))  # 设置缩略图最大尺寸
-                img.save(thumb_path)
-                return f'uploads/{new_filename}', f'uploads/thumbnail/{thumbnail_filename}'
-            except Exception as e:
-                print(f"生成缩略图出错: {e}")
-                # 如果缩略图失败，就返回默认缩略图
-                return f'uploads/{new_filename}', cls.DEFAULT_IMAGE
+                
+            # 转换为 RGB 避免不兼容
+            if img.mode in ("RGBA", "P"):
+                img = img.convert("RGB")
+
+            # 按格式分别压缩
+            if ext in ["jpg", "jpeg"]:
+                img.save(thumb_path, "JPEG", optimize=True, quality=85)  # 85质量足够清晰
+            elif ext == "png":
+                img.save(thumb_path, "PNG", optimize=True)
+            elif ext == "webp":
+                img.save(thumb_path, "WEBP", quality=85, method=6)
+            else:
+                img.save(thumb_path)  # 其他格式直接保存
+
+            print(f"已保存压缩图: {thumb_path}")
+        except Exception as e:
+            print(f"生成压缩图时出错: {e}")
+            thumbnail_filename = None
+
+            return f'uploads/{new_filename}', f'uploads/thumbnail/{thumbnail_filename}'
         else:
             # 没有上传文件，返回默认图片和缩略图
             return cls.DEFAULT_IMAGE, cls.DEFAULT_IMAGE
