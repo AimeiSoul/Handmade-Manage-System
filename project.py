@@ -185,16 +185,16 @@ class Project:
                 img = Image.open(save_path)
                 
             # 转换为 RGB 避免不兼容
-            if img.mode in ("RGBA", "P"):
-                img = img.convert("RGB")
+                if img.mode in ("RGBA", "P"):
+                    img = img.convert("RGB")
 
             # 保存为 webp (quality 可调)
-            img.save(thumb_path, "WEBP", quality=80, method=6)
+                img.save(thumb_path, "WEBP", quality=80, method=6)
 
-            print(f"已保存压缩图: {thumb_path}")
-        except Exception as e:
-            print(f"生成压缩图时出错: {e}")
-            thumbnail_filename = None
+                print(f"已保存压缩图: {thumb_path}")
+            except Exception as e:
+                print(f"生成压缩图时出错: {e}")
+                thumbnail_filename = None
 
             return f'uploads/{new_filename}', f'uploads/thumbnail/{thumbnail_filename}'
         else:
