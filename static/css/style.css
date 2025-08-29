@@ -195,37 +195,37 @@ h1, h2, h3 {
 @media (max-width: 768px) {
     .completed-projects-table {
         font-size: 0.9em;
+        display: block;
+        overflow-x: auto; /* 兜底，防止小屏幕挤爆 */
     }
-    
+
+    .completed-projects-table table {
+        width: 100%;
+        table-layout: auto; /* 允许自动分配宽度 */
+    }
+
     .completed-projects-table th,
     .completed-projects-table td {
-        padding: 8px 10px;
+        padding: 6px 8px;
+        white-space: normal;  /* 默认允许换行 */
     }
-    
+
+    /* 单独优化列 */
+    .project-title-cell,
+    .project-completed-cell,
+    .project-category-cell {
+        width: auto;  /* 自适应宽度 */
+        white-space: normal; /* 允许换行 */
+        overflow-wrap: break-word; /* 长词换行 */
+    }
+
     .project-actions-cell {
-        white-space: normal;
+        white-space: nowrap; /* 按钮保持一行 */
     }
 
-    /*移动端可以换行 */
-    .project-title-cell {
-        white-space: normal;
-    }
-
-    .project-description-cell {
-        white-space: normal;
-    }
-
-    .project-completed-cell {
-        white-space: normal;
-    }
-    
-    .project-actions-cell {
-        white-space: nowarp;
-    }
-    
     .btn-small {
-        display: block;
-        margin-bottom: 5px;
+        display: inline-block;
+        margin-bottom: 3px;
     }
 }
 
