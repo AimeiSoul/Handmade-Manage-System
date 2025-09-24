@@ -136,8 +136,8 @@ venv/bin/gunicorn -w 4 -b 127.0.0.1:8000 app:app
 
 **演示站点**：https://hand.aimeisoul.serv00.net
 
-（默认用户名：admin）
-（默认密码：sAk\_!r=H1sd）
+（demo用户名：admin）
+（demo密码：sAk\_!r=H1sd）
 
 ---
 
