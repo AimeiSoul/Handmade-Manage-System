@@ -159,6 +159,7 @@
         }, { passive: false });
     </script>
 
+    <script>
         //自动检查会话过期(每分钟检查一次)
         setInterval(function() {
             fetch('/check_session', {
