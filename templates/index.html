@@ -1,72 +1,103 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1 style="text-align: center; margin-top: 10px;">手工展示</h1>
+    <h1 class="page-title">手工展示</h1>
     
-    <div style="text-align: center; margin: 30px 0;">
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 20px;">
-            <a href="{{ url_for('show_category', category='knitting') }}" class="btn" style="font-size: 1.4em; padding: 15px 30px; width: 80%; max-width: 300px;">
-                <i class="fab fa-yarn"></i> 针织类
-            </a>
-            <a href="{{ url_for('show_category', category='crafting') }}" class="btn" style="font-size: 1.4em; padding: 15px 30px; width: 80%; max-width: 300px;">
-                <i class="fas fa-paint-brush"></i> 手工类
-            </a>
-        </div>
-    </div>
+    <!-- 分类导航入口 -->
+    <nav class="category-nav">
+        <a href="{{ url_for('show_category', category='knitting') }}" class="btn category-btn">
+            <i class="fab fa-yarn"></i> 针织类
+        </a>
+        <a href="{{ url_for('show_category', category='crafting') }}" class="btn category-btn">
+            <i class="fas fa-paint-brush"></i> 手工类
+        </a>
+    </nav>
     
-    <div style="text-align: center; margin-top: 40px;">
-        <h2>最新项目</h2>
-        <!-- 添加特定类名用于PC端未登录状态 -->
+    <!-- 最新项目列表 -->
+    <section class="latest-projects-section">
+        <h2 class="section-title">最新项目</h2>
+        
         <div class="project-grid {% if device_type == 'desktop' and not session.admin %}pc-home-grid{% endif %}">
             {% for project in latest_projects %}
-                <div class="project-card">
+                <article class="project-card">
                     <!-- 图片部分 -->
                     <div class="project-image-container">
                         {% if project.image_path %}
                             <img src="{{ url_for('static', filename=project.thumbnail_path) }}"
                                  data-full="{{ url_for('static', filename=project.image_path) }}"
                                  alt="{{ project.title }}" 
-                                 class="project-image">
+                                 class="project-image"
+                                 loading="lazy">
                         {% else %}
                             <div class="project-image-placeholder">
                                 <i class="fas fa-image"></i>
+                                <span>暂无图片</span>
                             </div>
                         {% endif %}
                     </div>
                     
                     <!-- 文字信息部分 -->
                     <div class="project-info">
-                        <h3 class="project-title">{{ project.title }}</h3>
-                        <p class="project-description">
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px;">
+                            <h3 class="project-title">{{ project.title }}</h3>
+
+                            <div class="project-like-container" style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
+                                <button type="button" class="btn-like {% if project.is_liked %}liked{% endif %}" onclick="toggleLike(this, {{ project.id }})"
+                                       style="background: transparent; border: none; cursor: pointer; font-size: 1.1rem; padding: 0; display: flex; align-items: center; transition: transform 0.2s;">
+                                   <i class="like-icon {% if project.id in liked_project_ids %}fas{% else %}far{% endif %} fa-heart"
+                                       style="color: #FF007F; transition: all 0.2s ease;"></i>
+                                </button>
+                                <span id="stars-count-{{ project.id }}" style="font-size: 0.9rem; color: #555; font-weight: 500;">
+                                    {{ project.stars if project.stars is not none else 0 }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <p class="project-description {% if not project.description %}empty{% endif %}">
                             {% if project.description %}
-                                 {{ project.description[:50] }}{% if project.description|length > 50 %}...{% endif %}
+                                {{ project.description[:50] }}{% if project.description|length > 50 %}...{% endif %}
                             {% else %}
-                                 <span style="color: #999; font-style: italic;">暂无描述</span>
+                                暂无描述
                             {% endif %}
                         </p>
                         
-                        <div class="project-meta">
-                            <span class="project-category">
+                        <div class="project-meta" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                            <span class="project-category text-muted" style="font-size: 0.88rem; font-weight: 500; color: var(--text-muted);">
+                                <i class="fas fa-tag" style="font-size: 0.8em; margin-right: 2px; color: var(--primary-color);"></i>
                                 {% if project.category == 'knitting' %}针织类{% else %}手工类{% endif %}
                             </span>
-                            <span class="status-tag 
-                                {% if project.status == '制作中' %}status-making{% endif %}
-                                {% if project.status == '排队中' %}status-queued{% endif %}
-                                {% if project.status == '已完成' %}status-completed{% endif %}
-                            ">
-                                {{ project.status }}
-                            </span>
+
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <span class="status-tag
+                                    {%- if project.status == '制作中' %} status-making
+                                    {%- elif project.status == '排队中' %} status-queued
+                                    {%- elif project.status == '已完成' %} status-completed
+                                    {%- endif -%}">
+                                    {{ project.status }}
+                                </span>
+
+                                {% if project.status == '已完成' and project.duration_days is not none %}
+                                    <span class="duration-badge" style="font-size: 0.8rem; color: var(--primary-hover); background-color: var(--primary-light); border: 1px solid var(--border-color); padding: 2px 8px; border-radius: 12px; display: inline-flex; align-items: center; font-weight: 500; backdrop-filter: blur(4px);">
+                                        <i class="far fa-clock" style="margin-right: 3px; font-size: 0.9em;"></i>
+                                        <span>{{ project.duration_days }}天</span>
+                                    </span>
+                                {% endif %}
+                            </div>
                         </div>
+
                         {% if project.status == '已完成' %}
-                        <div class="project-completed">
-                            <small>完成时间: {{ project.format_completed_date() }}</small>
-                        </div>
-                    {% endif %}
+                            <div class="project-completed">
+                                <small>完成时间: {{ project.format_completed_date() }}</small>
+                            </div>
+                        {% endif %}
                     </div>
-                </div>
+                </article>
             {% else %}
-                <p>暂无项目</p>
+                <div class="no-projects">
+                    <i class="fas fa-box-open"></i>
+                    <p>暂无最新项目展示</p>
+                </div>
             {% endfor %}
         </div>
-    </div>
+    </section>
 {% endblock %}

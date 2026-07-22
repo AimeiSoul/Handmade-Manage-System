@@ -84,8 +84,16 @@ app = Flask(__name__)
 app.secret_key = 'xxxxxx # 修改为你自己的secret_key
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 
+# 以下内容默认注释
 app.config['PREFERRED_URL_SCHEME'] = 'https'
 app.config['SERVER_NAME'] = 'xxx.xxx.xxx' #修改为你自己的域名 
+```
+
+在`init_db.py`中修改默认管理员密码：
+
+```python
+# 修改默认密码
+('admin', generate_password_hash('admin123'))
 ```
 
 ### 2. 创建虚拟环境并安装依赖
@@ -116,9 +124,43 @@ python app.py
 venv/bin/gunicorn -w 4 -b 127.0.0.1:8000 app:app
 ```
 
+项目附带`start.sh`脚本，实现`sytemd`启动服务：
+
+```bash
+sudo vim /etc/systemd/system/handmade.service
+```
+内容如下：
+
+```ini
+[Unit]
+Description=Handmade Flask Application
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/opt/Handmade-Manage-System/start.sh
+Restart=on-failure
+User=root
+WorkingDirectory=/opt/Handmade-Manage-System
+
+[Install]
+WantedBy=multi-user.target
+```
+
+保存并退出，然后启用服务：
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable handmade.service
+sudo systemctl start handmade.service
+```
+
+
 ### 6. 可选配置（CSP）
 
-在`base.html`中有CSP的相关配置，默认注释掉了，如果仅需要在公网通过`SERVER_NAME`访问，可选择取消注释，如下所示。
+为了提高安全性，可以配置内容安全策略（CSP）。
+
+在`base.html`中有CSP的相关配置，默认注释掉了，如果设置了`SERVER_NAME`访问，建议取消注释，如下所示。
 
 ```html
 <!-- 内容安全策略 -->
@@ -143,11 +185,7 @@ venv/bin/gunicorn -w 4 -b 127.0.0.1:8000 app:app
 
 ## 🔑 管理员功能
 
-* 默认初始化时需手动插入一个管理员账户（默认密码admin123）：
-
-```sql
-INSERT INTO admin (username, password) VALUES ('admin', 'pbkdf2:sha256:admin123');
-```
+* 默认初始化时已经内置一个管理员账户，默认密码admin123（可以修改密码））：
 
 * 登录后可在后台继续添加新管理员。
 

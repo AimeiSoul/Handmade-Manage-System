@@ -1,15 +1,16 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1 style="text-align: center;">
+    <h1 class="page-title">
         {% if category == 'knitting' %}针织类{% else %}手工类{% endif %}项目
     </h1>
     
     <div class="nav-buttons">
-        <a href="{{ url_for('home') }}" class="btn"><i class="fas fa-arrow-left"></i> 返回首页</a>
+        <a href="{{ url_for('home') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> 返回首页
+        </a>
     </div>
     
-    <!-- 添加特定类名用于PC端未登录状态 -->
     <div class="project-grid {% if device_type == 'desktop' and not session.admin %}pc-home-grid{% endif %}">
         {% for project in projects %}
             <div class="project-card">
@@ -23,22 +24,36 @@
                     {% else %}
                         <div class="project-image-placeholder">
                             <i class="fas fa-image"></i>
+                            <span>暂无图片</span>
                         </div>
                     {% endif %}
                 </div>
                 
-                <!-- 文字信息部分 -->
                 <div class="project-info">
-                    <h3 class="project-title">{{ project.title }}</h3>
-                    <p class="project-description">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px;">
+                            <h3 class="project-title">{{ project.title }}</h3>
+
+                            <div class="project-like-container" style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
+                                <button type="button" class="btn-like {% if project.is_liked %}liked{% endif %}" onclick="toggleLike(this, {{ project.id }})"
+                                       style="background: transparent; border: none; cursor: pointer; font-size: 1.1rem; padding: 0; display: flex; align-items: center; transition: transform 0.2s;">
+                                   <i class="like-icon {% if project.id in liked_project_ids %}fas{% else %}far{% endif %} fa-heart"
+                                       style="color: #FF007F; transition: all 0.2s ease;"></i>
+                                </button>
+                                <span id="stars-count-{{ project.id }}" style="font-size: 0.9rem; color: #555; font-weight: 500;">
+                                    {{ project.stars if project.stars is not none else 0 }}
+                                </span>
+                            </div>
+                        </div>
+
+                    <p class="project-description {% if not project.description %}empty{% endif %}">
                         {% if project.description %}
                             {{ project.description[:50] }}{% if project.description|length > 50 %}...{% endif %}
                         {% else %}
-                            <span style="color: #999; font-style: italic;">暂无描述</span>
+                            暂无描述
                         {% endif %}
                     </p>
                     
-                    <div class="project-meta">
+                    <div class="project-meta" style="display: flex; justify-content: space-between; align-items: center;">
                         <span class="status-tag 
                             {% if project.status == '制作中' %}status-making{% endif %}
                             {% if project.status == '排队中' %}status-queued{% endif %}
@@ -46,36 +61,60 @@
                         ">
                             {{ project.status }}
                         </span>
-                        <span class="project-date">创建时间: {{ project.created_at }}</span>
+
+                        {% if project.status == '已完成' and project.duration_days is not none %}
+                            <span class="duration-badge" style="font-size: 0.8rem; color: var(--primary-hover); background-color: var(--primary-light); border: 1px solid var(--border-color); padding: 2px 8px; border-radius: 12px; display: inline-flex; align-items: center; font-weight: 500; backdrop-filter: blur(4px);">
+                                <i class="far fa-clock" style="margin-right: 3px; font-size: 0.9em;"></i>
+                                <span>耗时 {{ project.duration_days }} 天</span>
+                            </span>
+                        {% endif %}
                     </div>
+
                     {% if project.status == '已完成' %}
-                    <div class="project-completed">
-                        <small>完成时间: {{ project.format_completed_date() }}</small>
-                    </div>
+                        <div class="project-dates-box" style="margin-top: 12px; padding-top: 8px; border-top: 1px dashed var(--border-color); font-size: 0.82rem; color: var(--text-muted);">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                                <span><i class="fas fa-play text-muted" style="margin-right: 4px; color: var(--primary-color);"></i>开始：{{ project.format_created_date() }}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span><i class="fas fa-check-double text-muted" style="margin-right: 4px; color: var(--primary-hover);"></i>完成：{{ project.format_completed_date() }}</span>
+                            </div>
+                        </div>
                     {% endif %}
                 </div>
             </div>
         {% else %}
-            <p>暂无项目</p>
+            <!-- 暂无项目时的优雅空状态显示 -->
+            <div class="no-projects">
+                <i class="fas fa-folder-open"></i>
+                <p>该分类下暂无项目记录</p>
+            </div>
         {% endfor %}
     </div>
 
-<!-- 分页按钮 -->
-<div class="pagination">
-    {% if page > 1 %}
-        <a href="{{ url_for('show_category', category=category, page=page-1) }}" class="page-btn">上一页</a>
-    {% endif %}
+    <!-- 分页控件：仅在总页数大于 1 时显示 -->
+    {% if total_pages > 1 %}
+        <nav class="pagination-container" aria-label="分类项目列表分页">
+            <div class="pagination">
+                {% if page > 1 %}
+                    <a href="{{ url_for('show_category', category=category, page=page-1) }}" class="page-btn">
+                        <i class="fas fa-chevron-left"></i> 上一页
+                    </a>
+                {% endif %}
 
-    {% for p in range(1, total_pages + 1) %}
-        <a href="{{ url_for('show_category', category=category, page=p) }}"
-           class="page-btn {% if p == page %}active{% endif %}">
-            {{ p }}
-        </a>
-    {% endfor %}
+                {% for p in range(1, total_pages + 1) %}
+                    <a href="{{ url_for('show_category', category=category, page=p) }}"
+                       class="page-btn {% if p == page %}active{% endif %}">
+                        {{ p }}
+                    </a>
+                {% endfor %}
 
-    {% if page < total_pages %}
-        <a href="{{ url_for('show_category', category=category, page=page+1) }}" class="page-btn">下一页</a>
+                {% if page < total_pages %}
+                    <a href="{{ url_for('show_category', category=category, page=page+1) }}" class="page-btn">
+                        下一页 <i class="fas fa-chevron-right"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </nav>
     {% endif %}
-</div>
 
 {% endblock %}

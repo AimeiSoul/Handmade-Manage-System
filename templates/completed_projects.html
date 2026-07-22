@@ -1,68 +1,109 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1 style="text-align: center;">已完成项目列表</h1>
+    <h1 class="page-title">已完成项目列表</h1>
     
+    <!-- 顶部操作导航 -->
     <div class="nav-buttons">
-        <a href="{{ url_for('admin_dashboard') }}" class="btn"><i class="fas fa-arrow-left"></i> 返回管理面板</a>
-        <a href="{{ url_for('add_new_project') }}" class="btn"><i class="fas fa-plus-circle"></i> 添加新项目</a>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> 返回管理面板
+        </a>
+        <a href="{{ url_for('add_new_project') }}" class="btn btn-primary">
+            <i class="fas fa-plus-circle"></i> 添加新项目
+        </a>
     </div>
     
     {% if projects %}
-        <div class="completed-projects-table">
-            <table>
+        <div class="table-responsive">
+            <table class="responsive-table">
                 <thead>
                     <tr>
-                        <th>项目名称</th>
-                        <th>描述</th>
-                        <th>完成时间</th>
-                        <th>类别</th>
-                        <th>操作</th>
+                        <th scope="col">项目名称</th>
+                        <th scope="col">描述</th>
+                        <th scope="col">完成时间</th>
+                        <th scope="col">类别</th>
+                        <th scope="col">用时</th>
+                        <th scope="col" class="text-center">操作</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for project in projects %}
                         <tr>
-                            <td class="project-title-cell">{{ project.title }}</td>
-                            <td class="project-description-cell">
+                            <td class="project-title-cell" data-label="项目名称">
+                                <strong>{{ project.title }}</strong>
+                            </td>
+                            <td class="project-description-cell" data-label="描述">
                                 {% if project.description %}
-                                    {{ project.description }}
+                                    <span class="description-text">{{ project.description }}</span>
                                 {% else %}
                                     <span class="no-description">暂无描述</span>
                                 {% endif %}
                             </td>
-                            <td class="project-completed-cell">{{ project.format_completed_date() }}</td>
-                            <td class="project-category-cell">
-                                {% if project.category == 'knitting' %}针织类{% else %}手工类{% endif %}
+                            <td class="project-completed-cell" data-label="完成时间">
+                                {{ project.format_completed_date() }}
                             </td>
-                            <td class="project-actions-cell">
-                                <a href="{{ url_for('edit_existing_project', project_id=project.id) }}" class="btn-small"><i class="fas fa-edit"></i> 编辑</a>
-                                <a href="{{ url_for('delete_existing_project', project_id=project.id) }}" class="btn-small btn-danger" onclick="return confirm('确定删除该项目吗？')"><i class="fas fa-trash"></i> 删除</a>
+                            <td class="project-category-cell" data-label="类别">
+                                <span class="category-badge">
+                                    {% if project.category == 'knitting' %}
+                                        <i class="fab fa-yarn"></i> 针织类
+                                    {% else %}
+                                        <i class="fas fa-paint-brush"></i> 手工类
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                {% if project.duration_days is not none %}
+                                    <strong>{{ project.duration_days }}</strong> 天
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td class="project-actions-cell" data-label="操作">
+                                <div class="table-actions">
+                                    <a href="{{ url_for('edit_existing_project', project_id=project.id) }}" class="btn-small btn-edit">
+                                        <i class="fas fa-edit"></i> 编辑
+                                    </a>
+                                    <a href="{{ url_for('delete_existing_project', project_id=project.id) }}" 
+                                       class="btn-small btn-danger" 
+                                       onclick="confirmDeleteProject(event, this.href, '{{ project.title|escape }}')">
+                                        <i class="fas fa-trash"></i> 删除
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+
+        <!-- 只有总页数大于 1 时才显示分页器 -->
+        {% if total_pages > 1 %}
+            <nav class="pagination-container" aria-label="项目列表分页">
+                <div class="pagination">
+                    {% if page > 1 %}
+                        <a href="{{ url_for('completed_projects', page=page-1) }}" class="page-btn prev-btn">
+                            <i class="fas fa-chevron-left"></i> 上一页
+                        </a>
+                    {% endif %}
+
+                    {% for p in range(1, total_pages + 1) %}
+                        <a href="{{ url_for('completed_projects', page=p) }}"
+                           class="page-btn {% if p == page %}active{% endif %}">{{ p }}</a>
+                    {% endfor %}
+
+                    {% if page < total_pages %}
+                        <a href="{{ url_for('completed_projects', page=page+1) }}" class="page-btn next-btn">
+                            下一页 <i class="fas fa-chevron-right"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            </nav>
+        {% endif %}
+
     {% else %}
         <div class="no-projects">
-            <p>暂无已完成项目</p>
+            <i class="fas fa-check-circle no-data-icon"></i>
+            <p>暂无已完成的项目记录</p>
         </div>
     {% endif %}
-
-<!-- 分页按钮 -->
-<div class="pagination">
-    {% if page > 1 %}
-        <a href="{{ url_for('completed_projects', page=page-1) }}" class="page-btn">上一页</a>
-    {% endif %}
-
-    {% for p in range(1, total_pages + 1) %}
-        <a href="{{ url_for('completed_projects', page=p) }}"
-           class="page-btn {% if p == page %}active{% endif %}">{{ p }}</a>
-    {% endfor %}
-
-    {% if page < total_pages %}
-        <a href="{{ url_for('completed_projects', page=page+1) }}" class="page-btn">下一页</a>
-    {% endif %}
-</div>
 {% endblock %}

@@ -1,21 +1,33 @@
 {% extends "base.html" %}
 
+{# 1. 覆盖 base.html 中的 header/nav 区域，隐藏顶部导航栏 #}
+{% block header %}{% endblock %}
+{% block nav %}{% endblock %}
+
 {% block content %}
-    <h1 style="text-align: center;">管理员登录</h1>
+<div class="login-container">
+    <h1 class="page-title">管理员登录</h1>
     
-    <form method="POST">
-        <div>
-            <label for="username">用户名:</label>
-            <input type="text" id="username" name="username" required>
+    <form method="POST" action="{{ url_for('admin_login') }}">
+        <div class="form-group">
+            <label for="username" class="form-label">用户名</label>
+            <input type="text" id="username" name="username" class="form-input" required autocomplete="username" placeholder="请输入用户名">
         </div>
         
-        <div>
-            <label for="password">密码:</label>
-            <input type="password" id="password" name="password" required>
+        <div class="form-group">
+            <label for="password" class="form-label">密码</label>
+            <input type="password" id="password" name="password" class="form-input" required autocomplete="current-password" placeholder="请输入密码">
         </div>
         
-        <div style="text-align: center; margin-top: 20px;">
-            <button type="submit" class="btn"><i class="fas fa-sign-in-alt"></i> 登录</button>
+        <!-- 底部双按钮区域：登录 + 返回 -->
+        <div class="button-group">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-sign-in-alt"></i> 登 录
+            </button>
+            <a href="{{ url_for('home') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> 返 回
+            </a>
         </div>
     </form>
+</div>
 {% endblock %}

@@ -1,97 +1,100 @@
 {% extends "base.html" %}
 
+{# 1. 定义项目卡片可复用组件宏 #}
+{% macro render_project_card(project) %}
+<article class="project-card">
+    <div class="project-image-container">
+        {% if project.image_path %}
+            <img src="{{ url_for('static', filename=project.thumbnail_path) }}"
+                 data-full="{{ url_for('static', filename=project.image_path) }}"
+                 alt="{{ project.title }}"
+                 class="project-image"
+                 loading="lazy">
+        {% else %}
+            <div class="project-image-placeholder">
+                <i class="fas fa-image"></i>
+                <span>暂无图片</span>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="project-info">
+        <h3 class="project-title">{{ project.title }}</h3>
+        
+        <p class="project-description {% if not project.description %}empty{% endif %}">
+            {% if project.description %}
+                {{ project.description[:50] }}{% if project.description|length > 50 %}...{% endif %}
+            {% else %}
+                <span class="no-description">暂无描述</span>
+            {% endif %}
+        </p>
+
+        <div class="project-meta">
+            <span class="status-tag 
+                {%- if project.status == '制作中' %} status-making
+                {%- elif project.status == '排队中' %} status-queued
+                {%- endif -%}">
+                {{ project.status }}
+            </span>
+        </div>
+
+        <!-- 管理员快捷操作区 -->
+        <div class="project-actions">
+            <a href="{{ url_for('edit_existing_project', project_id=project.id) }}" class="btn-small btn-edit">
+                <i class="fas fa-edit"></i> 编辑
+            </a>
+            <a href="{{ url_for('delete_existing_project', project_id=project.id) }}" 
+               class="btn-small btn-danger" 
+               onclick="confirmDeleteProject(event, this.href, '{{ project.title|escape }}')">
+                <i class="fas fa-trash"></i> 删除
+            </a>
+        </div>
+    </div>
+</article>
+{% endmacro %}
+
+
 {% block content %}
-    <h1 style="text-align: center;">管理面板</h1>
+    <h1 class="page-title">管理面板</h1>
     
-    <div class="nav-buttons">
-        <a href="{{ url_for('completed_projects') }}" class="btn"><i class="fas fa-check-circle"></i> 查看已完成项目</a>
+    <!-- 顶部快捷跳转区 -->
+    <div class="nav-buttons dashboard-nav">
+        <a href="{{ url_for('completed_projects') }}" class="btn btn-secondary">
+            <i class="fas fa-check-circle"></i> 查看已完成项目
+        </a>
     </div>
     
-    <h2>针织类项目（进行中）</h2>
-    {% if knitting_projects %}
-        <div class="project-grid">
-            {% for project in knitting_projects %}
-                <div class="project-card">
-                    {% if project.image_path %}
-                        <img src="{{ url_for('static', filename=project.thumbnail_path) }}"
-                             data-full="{{ url_for('static', filename=project.image_path) }}"
-                             alt="{{ project.title }}"
-                             class="project-image">
-                    {% else %}
-                        <div class="project-image-placeholder">
-                            <i class="fas fa-image"></i>
-                        </div>
-                    {% endif %}
-                    <div class="project-info">
-                        <h3 class="project-title">{{ project.title }}</h3>
-                        <p class="project-description">
-                            {% if project.description %}
-                                {{ project.description[:50] }}{% if project.description|length > 50 %}...{% endif %}
-                            {% else %}
-                                <span class="no-description">暂无描述</span>
-                            {% endif %}
-                        </p>
-                        <div class="project-meta">
-                            <span class="status-tag 
-                                {% if project.status == '制作中' %}status-making{% endif %}
-                                {% if project.status == '排队中' %}status-queued{% endif %}
-                            ">
-                                {{ project.status }}
-                            </span>
-                        </div>
-                        <div class="project-actions">
-                            <a href="{{ url_for('edit_existing_project', project_id=project.id) }}" class="btn-small"><i class="fas fa-edit"></i> 编辑</a>
-                            <a href="{{ url_for('delete_existing_project', project_id=project.id) }}" class="btn-small btn-danger" onclick="return confirm('确定删除该项目吗？')"><i class="fas fa-trash"></i> 删除</a>
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <p>暂无针织类项目</p>
-    {% endif %}
+    <!-- 1. 针织类项目区域 -->
+    <section class="dashboard-section">
+        <h2 class="section-title"><i class="fab fa-yarn"></i> 针织类项目（进行中）</h2>
+        {% if knitting_projects %}
+            <div class="project-grid">
+                {% for project in knitting_projects %}
+                    {{ render_project_card(project) }}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-projects">
+                <i class="fas fa-inbox"></i>
+                <p>暂无正在进行中的针织项目</p>
+            </div>
+        {% endif %}
+    </section>
     
-    <h2>手工类项目（进行中）</h2>
-    {% if crafting_projects %}
-        <div class="project-grid">
-            {% for project in crafting_projects %}
-                <div class="project-card">
-                    {% if project.image_path %}
-                        <img src="{{ url_for('static', filename=project.thumbnail_path) }}"
-                             data-full="{{ url_for('static', filename=project.image_path) }}"
-                             alt="{{ project.title }}"
-                             class="project-image">
-                    {% else %}
-                        <div class="project-image-placeholder">
-                            <i class="fas fa-image"></i>
-                        </div>
-                    {% endif %}
-                    <div class="project-info">
-                        <h3 class="project-title">{{ project.title }}</h3>
-                        <p class="project-description">
-                            {% if project.description %}
-                                {{ project.description[:50] }}{% if project.description|length > 50 %}...{% endif %}
-                            {% else %}
-                                <span class="no-description">暂无描述</span>
-                            {% endif %}
-                        </p>
-                        <div class="project-meta">
-                            <span class="status-tag 
-                                {% if project.status == '制作中' %}status-making{% endif %}
-                                {% if project.status == '排队中' %}status-queued{% endif %}
-                            ">
-                                {{ project.status }}
-                        </span>
-                        </div>
-                        <div class="project-actions">
-                            <a href="{{ url_for('edit_existing_project', project_id=project.id) }}" class="btn-small"><i class="fas fa-edit"></i> 编辑</a>
-                            <a href="{{ url_for('delete_existing_project', project_id=project.id) }}" class="btn-small btn-danger" onclick="return confirm('确定删除该项目吗？')"><i class="fas fa-trash"></i> 删除</a>
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <p>暂无手工类项目</p>
-    {% endif %}
+    <!-- 2. 手工类项目区域 -->
+    <section class="dashboard-section">
+        <h2 class="section-title"><i class="fas fa-paint-brush"></i> 手工类项目（进行中）</h2>
+        {% if crafting_projects %}
+            <div class="project-grid">
+                {% for project in crafting_projects %}
+                    {{ render_project_card(project) }}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-projects">
+                <i class="fas fa-inbox"></i>
+                <p>暂无正在进行中的手工项目</p>
+            </div>
+        {% endif %}
+    </section>
 {% endblock %}

@@ -1,69 +1,155 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1 style="text-align: center;">添加新项目</h1>
+<div class="form-card">
+    <h1 class="page-title">添加新项目</h1>
     
-    <form method="POST" enctype="multipart/form-data">
-        <div>
-            <label for="title">项目标题:</label>
-            <input type="text" id="title" name="title" required>
+    <form method="POST" enctype="multipart/form-data" class="project-form">
+        <div class="form-group">
+            <label for="title" class="form-label">
+                项目标题 <span class="required-star">*</span>
+            </label>
+            <input type="text" id="title" name="title" class="form-input" placeholder="请输入项目名称" required>
         </div>
         
-        <div>
-            <label for="description">项目描述:</label>
-            <textarea id="description" name="description" rows="4" placeholder="选填项，可以留空"></textarea>
+        <div class="form-group">
+            <label for="description" class="form-label">项目描述</label>
+            <textarea id="description" name="description" rows="4" class="form-textarea" placeholder="选填，记录一下创作灵感或详细说明..."></textarea>
         </div>
         
-        <div>
-            <label for="category">分类:</label>
-            <select id="category" name="category" required>
-                <option value="knitting">针织类</option>
-                <option value="crafting">手工类</option>
-            </select>
-        </div>
-        
-        <div>
-            <label for="status">状态:</label>
-            <select id="status" name="status" required onchange="toggleCompletedDate()">
-                <option value="制作中">制作中</option>
-                <option value="排队中">排队中</option>
-                <option value="已完成">已完成</option>
-            </select>
+        <div class="form-row">
+            <div class="form-group flex-1">
+                <label for="category" class="form-label">
+                    分类 <span class="required-star">*</span>
+                </label>
+                <select id="category" name="category" class="form-select" required>
+                    <option value="knitting">🧶 针织类</option>
+                    <option value="crafting">✂️ 手工类</option>
+                </select>
+            </div>
+            
+            <div class="form-group flex-1">
+                <label for="status" class="form-label">
+                    状态 <span class="required-star">*</span>
+                </label>
+                <select id="status" name="status" class="form-select" required onchange="toggleCompletedDate()">
+                    <option value="排队中" {% if project and project.status == '排队中' %}selected{% endif %}>⏳ 排队中</option>
+                    <option value="制作中" {% if project and project.status == '制作中' %}selected{% endif %}>🔨 制作中</option>
+                    <option value="已完成" {% if project and project.status == '已完成' %}selected{% endif %}>✅ 已完成</option>
+                </select>
+            </div>
         </div>
 
-        <div id="completedDateContainer" style="display: none;">
-            <label for="completed_at">完成时间:</label>
-            <input type="date" id="completed_at" name="completed_at">
-            <small style="color: #666;">（选填）</small>
+        <div id="completedDateContainer" class="form-group hidden-field">
+            <label for="completed_at" class="form-label" id="dateLabel">
+                时间 <span class="form-hint">(选填)</span>
+            </label>
+            <input type="date" id="completed_at" name="completed_at" class="form-input"
+                    value="{% if project %}{{ ((project.completed_at or project.created_at or '') | string)[:10] }}{% endif %}">
         </div>
         
-        <div>
-            <label for="image">项目图片:</label>
-            <input type="file" id="image" name="image" accept="image/*">
+        <!-- 上传图片与预览区域 -->
+        <div class="form-group">
+            <label class="form-label">项目图片</label>
+            <div class="file-upload-wrapper">
+                <label for="image" class="file-upload-label">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <span id="file-label-text">点击选择或拖拽图片文件</span>
+                </label>
+                <input type="file" id="image" name="image" accept="image/*" class="file-input" onchange="previewSelectedImage(this)">
+            </div>
+            
+            <!-- 上传前实时预览 -->
+            <div id="imagePreviewContainer" class="image-preview-box hidden-field">
+                <span class="preview-title">已选图片预览：</span>
+                <img id="imagePreview" src="" alt="选中图片预览">
+            </div>
         </div>
         
-        <div class="button-container">
-            <button type="submit" class="btn"><span class='btn-content'><i class="fas fa-plus-circle"></i> 添加项目</button>
-            <a href="{{ url_for('admin_dashboard') }}" class="btn"><span class='btn-content'><i class="fas fa-arrow-left"></i> 返回</a>
+        <!-- 底部提交/返回按钮 -->
+        <div class="button-group">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-plus-circle"></i> 保存并添加
+            </button>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> 返回控制台
+            </a>
         </div>
     </form>
+</div>
 
-    <script>
-        function toggleCompletedDate() {
-            const status = document.getElementById('status').value;
-            const completedDateContainer = document.getElementById('completedDateContainer');
-            
-            if (status === '已完成') {
-                completedDateContainer.style.display = 'block';
-            } else {
-                completedDateContainer.style.display = 'none';
-                document.getElementById('completed_at').value = '';
-            }
-        }
+<script>
+
+    function getTodayDateString() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    let initialStatus = '';
+    let initialDateValue = '';
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const status = document.getElementById('status');
+        const completedAtInput = document.getElementById('completed_at')
+        if (status) initialStatus = status.value ? status.value.trim() : '';
+        if (completedAtInput) initialDateValue = completedAtInput.value || '';
+        toggleCompletedDate();
+    });
+
+    function toggleCompletedDate() {
+        const status = document.getElementById('status').value;
+        const completedDateContainer = document.getElementById('completedDateContainer');
+        const completedAtInput = document.getElementById('completed_at');
+        const dateLabel = document.getElementById('dateLabel');
+
+        if (!status || !completedDateContainer || !completedAtInput) return;
+
+        const val = status ? status.trim() : '';
         
-        // 页面加载时检查状态
-        document.addEventListener('DOMContentLoaded', function() {
-            toggleCompletedDate();
-        });
-    </script>
+        if (val === '制作中' || val === '已完成') {
+            completedDateContainer.classList.remove('hidden-field');
+            completedDateContainer.style.display = 'block';
+            if (dateLabel) {
+                dateLabel.innerHTML = (val === '制作中' ? '开始时间' : '完成时间') + ' <span class="form-hint">(选填)</span>';
+            }
+            if (val === initialStatus && initialDateValue) {
+                completedAtInput.value = initialDateValue;
+            } else if (!completedAtInput.value || val !== initialStatus) {
+                completedAtInput.value = getTodayDateString();
+            }
+        } else {
+            completedDateContainer.classList.add('hidden-field');
+            completedDateContainer.style.display = 'none';
+        }
+    }
+
+    // 本地图片选择预览
+    function previewSelectedImage(input) {
+        const previewContainer = document.getElementById('imagePreviewContainer');
+        const previewImage = document.getElementById('imagePreview');
+        const labelText = document.getElementById('file-label-text');
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                previewContainer.classList.remove('hidden-field');
+            }
+            reader.readAsDataURL(input.files[0]);
+            labelText.textContent = `已选择: ${input.files[0].name}`;
+        } else {
+            previewImage.src = '';
+            previewContainer.classList.add('hidden-field');
+            labelText.textContent = '点击选择或拖拽图片文件';
+        }
+    }
+    
+    // 初始化检查
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleCompletedDate();
+    });
+</script>
 {% endblock %}
