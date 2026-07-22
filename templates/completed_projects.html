@@ -51,12 +51,14 @@
                                     {% endif %}
                                 </span>
                             </td>
-                            <td>
-                                {% if project.duration_days is not none %}
-                                    <strong>{{ project.duration_days }}</strong> 天
-                                {% else %}
-                                    -
-                                {% endif %}
+                            <td class="project-duration-cell" data-label="用时">
+                                <span class="duration-value">
+                                    {% if project.duration_days is not none %}
+                                        <strong>{{ project.duration_days }}</strong> 天
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </span>
                             </td>
                             <td class="project-actions-cell" data-label="操作">
                                 <div class="table-actions">

@@ -630,11 +630,31 @@ body.desktop.not-logged-in .container:has(.pc-home-grid) {
 }
 
 .miku-btn-danger {
-    background: #FF007F; /* 警示粉红 */
+    background: #FF007F; 
     color: #ffffff;
 }
 
 .miku-btn-danger:hover {
     background: #e00070;
     box-shadow: 0 4px 12px rgba(255, 0, 127, 0.35);
+}
+
+.project-duration-cell .duration-value {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px; 
+    float: right; 
+}
+
+@media screen and (max-width: 768px) {
+    .responsive-table td.project-duration-cell {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: right;
+    }
+
+    .project-duration-cell strong {
+        margin-right: 2px;
+    }
 }

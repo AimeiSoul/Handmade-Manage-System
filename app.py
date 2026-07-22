@@ -14,8 +14,8 @@ app.secret_key = 'sercet_key_here'
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 
 # 配置HTTPS（在反向代理后运行时需要）
-app.config['PREFERRED_URL_SCHEME'] = 'https'
-app.config['SERVER_NAME'] = 'handmade.domain.com'  # 替换为您的域名
+#app.config['PREFERRED_URL_SCHEME'] = 'https'
+#app.config['SERVER_NAME'] = 'handmade.domain.com'  # 替换为您的域名
 
 # 处理反向代理
 app.wsgi_app = ProxyFix(
